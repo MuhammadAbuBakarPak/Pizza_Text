@@ -76,15 +76,14 @@ public class PizzaText : MonoBehaviour
         moveR.y -= Input.GetAxis("RightJoystickVertical");
 
         //Debug.Log("moveL.x" + moveL.x + "moveL.y" + moveL.y);
-
-        if (lastSelectionTimeR <= 0.0f)
+        if (lastSelectionTimeL <= 0.0f)
         {
-            if (moveR != Vector2.zero)
+            if (moveL != Vector2.zero)
             {
                 float trackballAngle;
-                GetTrackBallInfo(out trackballAngle, moveR);
+                GetTrackBallInfo(out trackballAngle, moveL);
 
-                if (moveR.sqrMagnitude >= moveThreshold)
+                if (moveL.sqrMagnitude >= moveThreshold)
                 {
                     switch (selectedButton)
                     {
@@ -111,30 +110,29 @@ public class PizzaText : MonoBehaviour
                             break;
                     }
                 }
-            }
 
-            lastSelectionTimeR = defaultSelectionTime;
-            moveR = Vector2.zero;
-        }
-
-
-
-        if (lastSelectionTimeL <= 0.0f)
-        {
-            if (moveL != Vector2.zero)
-            {
-                float trackballAngle;
-                GetTrackBallInfo(out trackballAngle, moveL);
-
-                 if (moveL.sqrMagnitude >= moveThreshold)
-                {
-                    WriteCharacter(ref selectedButton, trackballAngle);
-                }
-                
             }
 
             lastSelectionTimeL = defaultSelectionTime;
             moveL = Vector2.zero;
+        }
+
+        if (lastSelectionTimeR <= 0.0f)
+        {
+            if (moveR != Vector2.zero)
+            {
+                float trackballAngle;
+                GetTrackBallInfo(out trackballAngle, moveR);
+
+                if (moveR.sqrMagnitude >= moveThreshold)
+                {
+                    WriteCharacter(ref selectedButton, trackballAngle);
+
+                }
+            }
+
+            lastSelectionTimeR = defaultSelectionTime;
+            moveR = Vector2.zero;
         }
     }
 
@@ -215,19 +213,19 @@ public class PizzaText : MonoBehaviour
 
         if (charArray != null)
         {
-            if (angle > 40.0f && angle <= 140.0f)
+            if (angle > 45.0f && angle <= 135.0f)
             {
                 inputField.text += charArray[0].ToString();
             }
-            else if (angle > 140.0f && angle <= 220.0f)
+            else if (angle > 135.0f && angle <= 225.0f)
             {
                 inputField.text += charArray[2].ToString();
             }
-            else if (angle > 220.0f && angle <= 320.0f)
+            else if (angle > 225.0f && angle <= 315.0f)
             {
                 inputField.text += charArray[1].ToString();
             }
-            else //if ((angle > 0.0f && angle <= 40.0f) || (angle > 320.0f && angle <= 360.0f))
+            else //if ((angle > 0.0f && angle <= 45.0f) || (angle > 315.0f && angle <= 360.0f))
             {
                 inputField.text += charArray[3].ToString();
             }
