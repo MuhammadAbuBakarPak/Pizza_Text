@@ -75,66 +75,73 @@ public class PizzaText : MonoBehaviour
         moveR.x += Input.GetAxis("RightJoystickHorizontal");
         moveR.y -= Input.GetAxis("RightJoystickVertical");
 
-        //Debug.Log("moveL.x" + moveL.x + "moveL.y" + moveL.y);
-        if (lastSelectionTimeL <= 0.0f)
-        {
-            if (moveL != Vector2.zero)
-            {
-                float trackballAngle;
-                GetTrackBallInfo(out trackballAngle, moveL);
 
-                if (moveL.sqrMagnitude >= moveThreshold)
-                {
-                    switch (selectedButton)
+        if (moveL != Vector2.zero || moveR != Vector2.zero)
+        {
+            if (moveL != Vector2.zero && lastSelectionTimeL <= 0.0f)
+            {
+                    float trackballAngle;
+                    GetTrackBallInfo(out trackballAngle, moveL);
+
+                    if (moveL.sqrMagnitude >= moveThreshold)
                     {
-                        case Keyname.ABCD:
-                            SelectionfromABCD(trackballAngle);
-                            break;
-                        case Keyname.EFGH:
-                            SelectionfromEFGH(trackballAngle);
-                            break;
-                        case Keyname.IJKL:
-                            SelectionfromIJKL(trackballAngle);
-                            break;
-                        case Keyname.MNOP:
-                            SelectionfromMNOP(trackballAngle);
-                            break;
-                        case Keyname.QRST:
-                            SelectionfromQRST(trackballAngle);
-                            break;
-                        case Keyname.UVWX:
-                            SelectionfromUVWX(trackballAngle);
-                            break;
-                        case Keyname.YZ:
-                            SelectionfromYZ(trackballAngle);
-                            break;
+                        switch (selectedButton)
+                        {
+                            case Keyname.ABCD:
+                                SelectionfromABCD(trackballAngle);
+                                break;
+                            case Keyname.EFGH:
+                                SelectionfromEFGH(trackballAngle);
+                                break;
+                            case Keyname.IJKL:
+                                SelectionfromIJKL(trackballAngle);
+                                break;
+                            case Keyname.MNOP:
+                                SelectionfromMNOP(trackballAngle);
+                                break;
+                            case Keyname.QRST:
+                                SelectionfromQRST(trackballAngle);
+                                break;
+                            case Keyname.UVWX:
+                                SelectionfromUVWX(trackballAngle);
+                                break;
+                            case Keyname.YZ:
+                                SelectionfromYZ(trackballAngle);
+                                break;
+                        }
                     }
-                }
 
+                lastSelectionTimeL = defaultSelectionTime;
+                moveL = Vector2.zero;
             }
 
-            lastSelectionTimeL = defaultSelectionTime;
-            moveL = Vector2.zero;
-        }
-
-        if (lastSelectionTimeR <= 0.0f)
-        {
-            if (moveR != Vector2.zero)
+            if (moveR != Vector2.zero && lastSelectionTimeR <= 0.0f)
             {
-                float trackballAngle;
-                GetTrackBallInfo(out trackballAngle, moveR);
+                    float trackballAngle;
+                    GetTrackBallInfo(out trackballAngle, moveR);
 
-                if (moveR.sqrMagnitude >= moveThreshold)
-                {
-                    WriteCharacter(ref selectedButton, trackballAngle);
-
-                }
+                    if (moveR.sqrMagnitude >= moveThreshold)
+                    {
+                        WriteCharacter(ref selectedButton, trackballAngle);
+                    }
+                lastSelectionTimeR = defaultSelectionTime;
+                moveR = Vector2.zero;
             }
-
-            lastSelectionTimeR = defaultSelectionTime;
-            moveR = Vector2.zero;
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private void GetTrackBallInfo(out float angle, Vector2 move)
     {
