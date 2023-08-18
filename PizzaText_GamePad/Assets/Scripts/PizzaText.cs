@@ -48,8 +48,8 @@ public class PizzaText : MonoBehaviour
 
     private void Start()
     {
-        selectedButton = Keyname.ABCD;
-        SetButtonColor(buttons[(int)Keyname.ABCD], selectedColor);
+       selectedButton = Keyname.ABCD;
+       SetButtonColor(buttons[(int)Keyname.ABCD], selectedColor);
         
         textField.text = sentences[currentSentenceIndex];
         inputField.ActivateInputField();
@@ -75,7 +75,6 @@ public class PizzaText : MonoBehaviour
         moveR.x += Input.GetAxis("RightJoystickHorizontal");
         moveR.y -= Input.GetAxis("RightJoystickVertical");
 
-
         if (moveL != Vector2.zero || moveR != Vector2.zero)
         {
             if (moveL != Vector2.zero && lastSelectionTimeL <= 0.0f)
@@ -85,31 +84,34 @@ public class PizzaText : MonoBehaviour
 
                     if (moveL.sqrMagnitude >= moveThreshold)
                     {
-                        switch (selectedButton)
-                        {
-                            case Keyname.ABCD:
-                                SelectionfromABCD(trackballAngle);
-                                break;
-                            case Keyname.EFGH:
-                                SelectionfromEFGH(trackballAngle);
-                                break;
-                            case Keyname.IJKL:
-                                SelectionfromIJKL(trackballAngle);
-                                break;
-                            case Keyname.MNOP:
-                                SelectionfromMNOP(trackballAngle);
-                                break;
-                            case Keyname.QRST:
-                                SelectionfromQRST(trackballAngle);
-                                break;
-                            case Keyname.UVWX:
-                                SelectionfromUVWX(trackballAngle);
-                                break;
-                            case Keyname.YZ:
-                                SelectionfromYZ(trackballAngle);
-                                break;
-                        }
+                        SelectSlice(trackballAngle);
                     }
+                /*
+                    switch (selectedButton)
+                    {
+                        case Keyname.ABCD:
+                            SelectionfromABCD(trackballAngle);
+                            break;
+                        case Keyname.EFGH:
+                            SelectionfromEFGH(trackballAngle);
+                            break;
+                        case Keyname.IJKL:
+                            SelectionfromIJKL(trackballAngle);
+                            break;
+                        case Keyname.MNOP:
+                            SelectionfromMNOP(trackballAngle);
+                            break;
+                        case Keyname.QRST:
+                            SelectionfromQRST(trackballAngle);
+                            break;
+                        case Keyname.UVWX:
+                            SelectionfromUVWX(trackballAngle);
+                            break;
+                        case Keyname.YZ:
+                            SelectionfromYZ(trackballAngle);
+                            break;
+                    } */
+
 
                 lastSelectionTimeL = defaultSelectionTime;
                 moveL = Vector2.zero;
@@ -129,16 +131,6 @@ public class PizzaText : MonoBehaviour
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -171,11 +163,6 @@ public class PizzaText : MonoBehaviour
             {
                 inputField.text = inputField.text.Remove(T - 1);
             }
-        }
-   
-        if (Input.GetKeyDown(KeyCode.F3))
-        {
-            inputField.text += ' ';
         }
 
         // Handle the "Enter" key press
@@ -250,6 +237,53 @@ public class PizzaText : MonoBehaviour
         }
     }
 
+    private void SelectSlice(float angle)
+    {
+        if (angle > 12.86f && angle <= 64.29f)
+        {
+            selectedButton = Keyname.EFGH;
+        }
+        else if (angle > 64.29f && angle <= 115.72f)
+        {
+            selectedButton = Keyname.ABCD;
+        }
+        else if (angle > 115.72f && angle <= 167.15f)
+        {
+            selectedButton = Keyname.YZ;
+        }
+        else if (angle > 167.15f && angle <= 218.58f)
+        {
+            selectedButton = Keyname.UVWX;
+        }
+        else if (angle > 218.58f && angle <= 270.01f)
+        {
+            selectedButton = Keyname.QRST;
+        }
+        else if (angle > 270.01f && angle <= 321.44f)
+        {
+            selectedButton = Keyname.MNOP;
+        }
+        else //if ((angle > 0.0f &&  angle <= 12.86f) || (angle > 321.44f &&  angle <= 360.0f))
+        {
+            selectedButton = Keyname.IJKL;
+        }
+
+        SetButtonColor(buttons[(int)Keyname.ABCD], originalColor1);
+        SetButtonColor(buttons[(int)Keyname.EFGH], originalColor2);
+        SetButtonColor(buttons[(int)Keyname.IJKL], originalColor3);
+        SetButtonColor(buttons[(int)Keyname.MNOP], originalColor2);
+        SetButtonColor(buttons[(int)Keyname.QRST], originalColor3);
+        SetButtonColor(buttons[(int)Keyname.UVWX], originalColor2);
+        SetButtonColor(buttons[(int)Keyname.YZ], originalColor3);
+
+        SetButtonColor(buttons[(int)selectedButton], selectedColor);
+    }
+
+
+
+
+
+    /*
     // Selection for neighbours of ABCD
     public void SelectionfromABCD(float angle)
     {
@@ -357,5 +391,5 @@ public class PizzaText : MonoBehaviour
         SetButtonColor(buttons[(int)Keyname.YZ], originalColor3);
         SetButtonColor(buttons[(int)selectedButton], selectedColor);
     }
-
+    */
 }
