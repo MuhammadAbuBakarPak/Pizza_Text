@@ -1,11 +1,16 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using System.Collections.Concurrent;
+using MultiInput.Internal.Platforms.Windows;
+using MultiInput.Internal.Platforms.Windows.PInvokeNet;
 
-
-public class PizzaText : MonoBehaviour
+public class PizzaTextTrackball : MonoBehaviour
 {
+    private MyWMListener listener;
+
     public enum Keyname
     {
         ABCD, EFGH, IJKL, MNOP, QRST, UVWX, YZ
@@ -17,8 +22,14 @@ public class PizzaText : MonoBehaviour
 
     private Dictionary<Keyname, ArrayList> charMap = new Dictionary<Keyname, ArrayList>();
 
-    private const float moveThreshold = 10.0f;
+    private readonly ConcurrentQueue<RawInput> inputQueue = new ConcurrentQueue<RawInput>();
+
+    private const int leftTrackballDeviceID = 389154161;
+    private const int rightTrackballDeviceID = -25489911;
+
+    private const float moveThreshold = 800.0f;
     private const float defaultSelectionTime = 0.15f;
+
 
     private float lastSelectionTimeL = defaultSelectionTime;
     private float lastSelectionTimeR = defaultSelectionTime;
@@ -32,7 +43,7 @@ public class PizzaText : MonoBehaviour
     private Color originalColor3 = new Color(0.1499644f, 0.1294945f, 0.2830189f);
 
     private Keyname selectedButton;
-  
+
 
     private float startTime = 0.0f;
 
@@ -45,12 +56,31 @@ public class PizzaText : MonoBehaviour
         "typing with trackball is easy"
     };
 
+    private void Awake()
+    {
+        listener = new MyWMListener(OnInput, OnDeviceAdded, OnDeviceRemoved);
+    }
+
+    private bool OnInput(RawInput input)
+    {
+        inputQueue.Enqueue(input);
+        return true;
+    }
+
+    private void OnDeviceAdded(RawInputDevicesListItem device)
+    {
+    }
+
+    private void OnDeviceRemoved(RawInputDevicesListItem device)
+    {
+    }
+
 
     private void Start()
     {
-       selectedButton = Keyname.ABCD;
-       SetButtonColor(buttons[(int)Keyname.ABCD], selectedColor);
-        
+        selectedButton = Keyname.ABCD;
+        SetButtonColor(buttons[(int)Keyname.ABCD], selectedColor);
+
         textField.text = sentences[currentSentenceIndex];
         inputField.ActivateInputField();
 
@@ -63,55 +93,39 @@ public class PizzaText : MonoBehaviour
         charMap.Add(Keyname.YZ, new ArrayList() { 'y', 'z', ' ', ' ' });
     }
 
+
     public void Update()
     {
         // Update the selection cooldown
         lastSelectionTimeL -= Time.deltaTime;
         lastSelectionTimeR -= Time.deltaTime;
 
-        moveL.x += Input.GetAxis("LeftJoystickHorizontal");
-        moveL.y -= Input.GetAxis("LeftJoystickVertical");
 
-        moveR.x += Input.GetAxis("RightJoystickHorizontal");
-        moveR.y -= Input.GetAxis("RightJoystickVertical");
+        while (inputQueue.TryDequeue(out var val))
+        {
+            if (val.Header.Type == RawInputType.Mouse && val.Header.Device.ToInt32() == leftTrackballDeviceID)
+            {
+                moveL.x += val.Data.Mouse.LastX;
+                moveL.y -= val.Data.Mouse.LastY;
+            }
+            else if (val.Header.Type == RawInputType.Mouse && val.Header.Device.ToInt32() == rightTrackballDeviceID)
+            {
+                moveR.x += val.Data.Mouse.LastX;
+                moveR.y -= val.Data.Mouse.LastY;
+            }
+        }
 
         if (moveL != Vector2.zero || moveR != Vector2.zero)
         {
             if (moveL != Vector2.zero && lastSelectionTimeL <= 0.0f)
             {
-                    float trackballAngle;
-                    GetTrackBallInfo(out trackballAngle, moveL);
+                float trackballAngle;
+                GetTrackBallInfo(out trackballAngle, moveL);
 
-                    if (moveL.sqrMagnitude >= moveThreshold)
-                    {
-                        SelectSlice(trackballAngle);
-                    }
-                /*
-                    switch (selectedButton)
-                    {
-                        case Keyname.ABCD:
-                            SelectionfromABCD(trackballAngle);
-                            break;
-                        case Keyname.EFGH:
-                            SelectionfromEFGH(trackballAngle);
-                            break;
-                        case Keyname.IJKL:
-                            SelectionfromIJKL(trackballAngle);
-                            break;
-                        case Keyname.MNOP:
-                            SelectionfromMNOP(trackballAngle);
-                            break;
-                        case Keyname.QRST:
-                            SelectionfromQRST(trackballAngle);
-                            break;
-                        case Keyname.UVWX:
-                            SelectionfromUVWX(trackballAngle);
-                            break;
-                        case Keyname.YZ:
-                            SelectionfromYZ(trackballAngle);
-                            break;
-                    } */
-
+                if (moveL.sqrMagnitude >= moveThreshold)
+                {
+                    SelectSlice(trackballAngle);
+                }
 
                 lastSelectionTimeL = defaultSelectionTime;
                 moveL = Vector2.zero;
@@ -119,13 +133,13 @@ public class PizzaText : MonoBehaviour
 
             if (moveR != Vector2.zero && lastSelectionTimeR <= 0.0f)
             {
-                    float trackballAngle;
-                    GetTrackBallInfo(out trackballAngle, moveR);
+                float trackballAngle;
+                GetTrackBallInfo(out trackballAngle, moveR);
 
-                    if (moveR.sqrMagnitude >= moveThreshold)
-                    {
-                        WriteCharacter(ref selectedButton, trackballAngle);
-                    }
+                if (moveR.sqrMagnitude >= moveThreshold)
+                {
+                    WriteCharacter(ref selectedButton, trackballAngle);
+                }
                 lastSelectionTimeR = defaultSelectionTime;
                 moveR = Vector2.zero;
             }
@@ -153,7 +167,7 @@ public class PizzaText : MonoBehaviour
         int T = inputField.text.Length;
         if (Input.anyKeyDown && T == 0 && startTime == 0.0f)
         {
-            startTime = Time.time;  
+            startTime = Time.time;
         }
 
         // Handle backspace key
@@ -280,116 +294,14 @@ public class PizzaText : MonoBehaviour
     }
 
 
-
-
-
-    /*
-    // Selection for neighbours of ABCD
-    public void SelectionfromABCD(float angle)
+    private void OnDestroy()
     {
-        if (angle > 90.0f && angle <= 270.0f)
+        if (listener != null)
         {
-            selectedButton = Keyname.YZ;
+            listener.Dispose();
+            listener = null;
         }
-        else //if ((angle > 0.0f && angle <= 90.0f) || (angle > 270.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.EFGH;
-        }
-        SetButtonColor(buttons[(int)Keyname.ABCD], originalColor1);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
     }
 
-    // Selection for neighbours of EFGH
-    public void SelectionfromEFGH(float angle)
-    {
-        if (angle > 40.0f && angle <= 220.0f )
-        {
-            selectedButton = Keyname.ABCD;
-        }
-        else //if ((angle > 0.0f && angle <= 40.0f) || (angle > 220.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.IJKL;
-        }
-        SetButtonColor(buttons[(int)Keyname.EFGH], originalColor2);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
-    }
 
-    // Selection for neighbours of IJKL
-    public void SelectionfromIJKL(float angle)
-    {
-        if (angle > 160.0f && angle <= 340.0f)
-        {
-            selectedButton = Keyname.MNOP;
-        }
-        else //if ((angle > 0.0f && angle <= 160.0f) || (angle > 340.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.EFGH;
-        }
-       
-        SetButtonColor(buttons[(int)Keyname.IJKL], originalColor3);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
-    }
-
-    // Selection for neighbours of MNOP
-    public void SelectionfromMNOP(float angle)
-    {
-        if (angle > 110.0f && angle <= 290.0f)
-        {
-            selectedButton = Keyname.QRST;
-        }
-        else //if ((angle > 0.0f && angle <= 110.0f) || (angle > 290.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.IJKL;
-        }
-       
-        SetButtonColor(buttons[(int)Keyname.MNOP], originalColor2);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
-    }
-
-    // Selection for neighbours of QRST
-    public void SelectionfromQRST(float angle)
-    {
-        if (angle > 60.0f && angle <= 240.0f)
-        {
-            selectedButton = Keyname.UVWX;
-        }
-        else //if ((angle > 0.0f && angle <= 60.0f) || (angle > 240.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.MNOP;
-        }
-
-        SetButtonColor(buttons[(int)Keyname.QRST], originalColor3);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
-    }
-
-    // Selection for neighbours of UVWX
-    public void SelectionfromUVWX(float angle)
-    {
-        if (angle > 20.0f && angle <= 200.0f)
-        {
-            selectedButton = Keyname.YZ;
-        }
-        else //if ((angle > 0.0f && angle <= 20.0f) || (angle > 200.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.QRST;
-        }
-        SetButtonColor(buttons[(int)Keyname.UVWX], originalColor2);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
-    }
-
-    // Selection for neighbours of YZ
-    public void SelectionfromYZ(float angle)
-    {
-        if (angle > 140.0f && angle <= 320.0f)
-        {
-            selectedButton = Keyname.UVWX;
-        }
-        else //if ((angle > 0.0f && angle <= 140.0f) || (angle > 320.0f && angle <= 360.0f))
-        {
-            selectedButton = Keyname.ABCD;
-        }
-        SetButtonColor(buttons[(int)Keyname.YZ], originalColor3);
-        SetButtonColor(buttons[(int)selectedButton], selectedColor);
-    }
-    */
 }
